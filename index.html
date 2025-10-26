@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>数学タイピング道場</title>
+    <style>
+        /* --- 1. 基本設定（全体） --- */
+        body {
+            box-sizing: border-box;
+            /* ★大人びたダーク（黒）基調の背景 */
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #E0E0E0; /* 文字は白っぽく */
+            
+            /* ★フォントをモダンで読みやすく */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+            
+            margin: 0;
+            padding: 20px;
+            
+            /* ★全体を中央揃えに */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100%;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            text-align: center;
+            
+            /* ★控えめなグラデーションテキスト */
+            background: linear-gradient(45deg, #8B9DC3, #DFB2F4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            
+            margin-bottom: 30px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(139, 157, 195, 0.2);
+        }
+
+        /* --- 2. 各エリア共通（カードデザイン） --- */
+        .settings,
+        .game-area,
+        .result-area {
+            /* ★背景を少し明るいダークグレーに */
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            
+            /* ★影をつけて立体感を出す（大人っぽさ）*/
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px; /* 角を丸く */
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            
+            width: 90%;
+            max-width: 750px;
+            padding: 30px;
+            box-sizing: border-box; /* パディングを含めて幅を計算 */
+            margin-top: 20px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- 3. 設定エリア --- */
+        .settings {
+            text-align: center;
+        }
+        .settings label {
+            margin: 0 15px 0 15px;
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #E0E0E0;
+        }
+        .settings select {
+            font-size: 1.1em;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 2px solid #444;
+            background: rgba(51, 51, 51, 0.8);
+            color: #E0E0E0;
+            margin-right: 20px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        .settings select:hover {
+            border-color: #4F46E5;
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.3);
+        }
+        .settings select:focus {
+            border-color: #4F46E5;
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.5);
+        }
+
+        /* ★ボタンのデザイン (スタート/リスタート共通) */
+        #startButton,
+        #restartButton {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #FFFFFF;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            
+            /* ★華やかなグラデーションボタン */
+            background: linear-gradient(45deg, #4F46E5, #9333EA, #EC4899);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.4);
+            
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #startButton::before,
+        #restartButton::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        #startButton:hover::before,
+        #restartButton:hover::before {
+            left: 100%;
+        }
+
+        #startButton:hover,
+        #restartButton:hover {
+            /* ★ホバー時（マウスを乗せた時）に少し浮き上がる */
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(147, 51, 234, 0.6);
+        }
+        #startButton:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* --- 4. ゲームエリア --- */
+        .game-area {
+            text-align: left;
+            font-size: 1.6em; /* タイピング文字を大きく */
+            line-height: 1.6;
+            overflow-wrap: break-word;
+            word-break: break-all;
+        }
+
+        /* お題のテキスト (日本語) */
+        #questionText {
+            font-weight: bold;
+            color: #FFFFFF; /* くっきり白く */
+            font-size: 1.4em;
+            min-height: 60px;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        /* 読み仮名・ローマ字 (未入力) */
+        #romanText {
+            color: #888; /* 未入力はグレーアウト */
+            font-size: 1.2em;
+            min-height: 50px;
+            text-align: center;
+            padding: 15px;
+            background: rgba(136, 136, 136, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #666;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+            margin-bottom: 15px;
+        }
+
+        /* タイプ済みのテキスト (ローマ字) */
+        #typedText {
+            /* ★タイプ済みは鮮やかな青に */
+            color: #38BDF8; 
+            min-height: 50px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            font-size: 1.2em;
+            text-align: center;
+            padding: 15px;
+            background: rgba(56, 189, 248, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #38BDF8;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+
+        /* スコアボード */
+        .score-board {
+            margin-top: 20px;
+            font-size: 1em;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+        .score-board > span {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .score-board span span {
+            font-weight: bold;
+            font-size: 1.3em;
+            margin: 0 5px;
+        }
+
+        /* スコアボードの色分け */
+        #question-counter { color: #FFA726; } /* 残り問題数 */
+        #score { color: #66BB6A; } /* スコア */
+        #miss { color: #EF5350; } /* ミス */
+        #timer { color: #5C6BC0; } /* タイマー */
+
+        /* --- 5. 結果表示画面 --- */
+        .result-area {
+            text-align: center;
+        }
+        .result-area h2 {
+            font-size: 2.5em;
+            /* ★結果メッセージにもグラデーション */
+            background: linear-gradient(45deg, #66BB6A, #38BDF8, #FFD93D);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .result-stats div {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            transition: transform 0.3s ease;
+        }
+        .result-stats div:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        .result-stats p {
+            font-size: 1.1em; /* 少し大きく */
+            color: #AAA;
+            margin: 0 0 10px 0;
+            font-weight: 600;
+        }
+        .result-stats span {
+            font-size: 2.8em; /* 結果の数字は大きく！ */
+            font-weight: bold;
+            color: #E0E0E0;
+            display: block;
+        }
+        /* 平均とミスは色分け */
+        #result-score { color: #66BB6A; }
+        #result-avg { color: #38BDF8; }
+        #result-miss { color: #EF5350; }
+
+        /* --- 6. 非表示クラス --- */
+        .hidden {
+            display: none;
+        }
+
+        /* レスポンシブデザイン */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .settings, .game-area, .result-area {
+                padding: 20px;
+                width: 95%;
+            }
+            
+            #questionText {
+                font-size: 1.2rem;
+            }
+            
+            #romanText, #typedText {
+                font-size: 1rem;
+            }
+            
+            .score-board {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            
+            .result-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* フォーカス時の効果 */
+        button:focus, select:focus {
+            outline: 3px solid rgba(79, 70, 229, 0.5);
+            outline-offset: 2px;
+        }
+
+        /* ミス時の軽い演出 */
+        .miss-flash {
+            border-left-color: #EF5350 !important;
+            transition: border-left-color 0.2s ease;
+        }
+
+        /* フッター */
+        .footer {
+            margin-top: 40px;
+            padding: 20px;
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 750px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>数学タイピング道場</h1>
+    
+    <div class="settings" id="settings-area">
+        <label for="grade">学年:</label>
+        <select id="grade">
+            <option value="1">1年生</option>
+            <option value="2">2年生</option>
+            <option value="3">3年生</option>
+        </select>
+        
+        <button id="startButton">ゲームスタート！</button>
+    </div>
+
+    <div class="game-area hidden" id="game-area">
+        <div id="questionText">ここに問題文が表示されます</div>
+        
+        <div id="romanText"></div>
+        
+        <div id="typedText"></div>
+        
+        <div class="score-board">
+            <span>残り: <span id="question-counter">0 / 0</span></span>
+            <span>スコア: <span id="score">0</span></span>
+            <span>ミス: <span id="miss">0</span></span>
+            <span>残り時間: <span id="timer">60</span>秒</span>
+        </div>
+    </div>
+
+    <div class="result-area hidden" id="result-area">
+        <h2 id="result-message">クリア！</h2>
+        
+        <div class="result-stats">
+            <div>
+                <p>正しく打った回数</p>
+                <span id="result-score">0</span> 回
+            </div>
+            <div>
+                <p>平均タイプ/秒</p>
+                <span id="result-avg">0.00</span> 回/秒
+            </div>
+            <div>
+                <p>間違えた回数</p>
+                <span id="result-miss">0</span> 回
+            </div>
+        </div>
+
+        <button id="restartButton">もう一度挑戦する</button>
+    </div>
+
+    <div class="footer">
+        ver. 2.0 | D.Y
+    </div>
+
+    <script type="module">
+/* ===================================================
+ * 数学タイピング道場 (script.js) - 改良版
+ * =================================================== */
+
+// --- 1. ライブラリのインポート ---
+// keygraph.js ライブラリから関数をインポート
+import { build_keygraph } from "./keygraph.js";
+
+// --- 2. 定数・グローバル変数 ---
+
+// ★★★ Google Apps Script の WebアプリURL ★★★
+// (スプレッドシート連携APIのURLをここに貼り付け)
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby_NJEyyEI0EPS18Jn5xF5S45qZvfb7iapB6Hvne6Mi3kte49j94rg2rGVldHHQ501StA/exec"; 
+
+// すべての問題を格納する (起動時にAPIから取得)
+let allQuestions = {}; 
+
+// keygraphライブラリのインスタンスを作成
+let keygraph;
+
+// ★追加: ゲームの基本設定
+const QUESTION_LIMIT = 10;  // 1ゲームの問題数
+const INITIAL_TIME = 60;    // 制限時間（秒）
+
+// --- HTML要素を格納する変数 ---
+let gradeSelect, startButton, questionTextEl, romanTextEl, typedTextEl, scoreEl, missEl, timerEl;
+let settingsArea, gameArea, resultArea; // 画面全体
+let questionCounterEl; // 残り問題数
+let resultMessageEl, resultScoreEl, resultAvgEl, resultMissEl, restartButton; // 結果画面
+
+// --- ゲームの状態を管理する変数 ---
+let gameQuestions = []; // このゲームで実際に出題される問題のリスト
+let score = 0;
+let miss = 0;
+let timerId = null;
+let remainingTime = INITIAL_TIME;
+let isPlaying = false;
+
+// ★追加: ゲームごとの状態
+let totalQuestionsInGame = 0; // 実際に出題される問題数
+let currentQuestionNumber = 0; // 現在何問目か
+
+// --- 3. 初期化処理 (DOM読み込み完了時) ---
+document.addEventListener('DOMContentLoaded', () => {
+    // ★★★ ログ ①: 初期化開始 ★★★
+    console.log('DOM読み込み完了。初期化を開始します。');
+
+    // --- HTML要素を変数に代入 ---
+    gradeSelect = document.getElementById('grade');
+    startButton = document.getElementById('startButton');
+    questionTextEl = document.getElementById('questionText');
+    romanTextEl = document.getElementById('romanText');
+    typedTextEl = document.getElementById('typedText');
+    scoreEl = document.getElementById('score');
+    missEl = document.getElementById('miss');
+    timerEl = document.getElementById('timer');
+
+    // 画面エリア
+    settingsArea = document.getElementById('settings-area');
+    gameArea = document.getElementById('game-area');
+    resultArea = document.getElementById('result-area');
+
+    // 問題カウンター
+    questionCounterEl = document.getElementById('question-counter');
+
+    // 結果画面
+    resultMessageEl = document.getElementById('result-message');
+    resultScoreEl = document.getElementById('result-score');
+    resultAvgEl = document.getElementById('result-avg');
+    resultMissEl = document.getElementById('result-miss');
+    restartButton = document.getElementById('restartButton');
+
+    // ★★★ ログ ②: 要素取得の確認 ★★★
+    if (!gradeSelect || !startButton || !gameArea || !resultArea) {
+        console.error('必須要素(grade, startButton, gameArea, resultArea)が見つかりません。');
+        return;
+    }
+
+    // --- 初期表示 (データ読み込み前) ---
+    settingsArea.classList.remove('hidden'); // 設定画面は表示
+    gameArea.classList.add('hidden');        // ゲーム画面は非表示
+    resultArea.classList.add('hidden');      // 結果画面は非表示
+
+    questionTextEl.textContent = '問題データを読み込み中...';
+    romanTextEl.textContent = 'スプレッドシートから取得しています...';
+    startButton.disabled = true;
+
+    // --- メイン処理: スプレッドシートからデータを読み込む ---
+    loadQuestionsAndSetupGame();
+});
+
+// --- 4. 非同期データ読み込み ---
+/**
+ * スプレッドシートから問題データを非同期で取得する
+ */
+async function loadQuestionsAndSetupGame() {
+    try {
+        // ★★★ ログ: データ取得開始 ★★★
+        console.log('スプレッドシートから問題データを取得開始...', WEB_APP_URL);
+        
+        const response = await fetch(WEB_APP_URL);
+        if (!response.ok) {
+            throw new Error(`HTTPエラー: ${response.status}`);
+        }
+        
+        allQuestions = await response.json(); // 取得したJSONデータをグローバル変数に格納
+
+        // ★★★ ログ (データ確認) ★★★
+        console.log('すべての問題データを読み込みました:', allQuestions);
+
+        // ★ データ取得後に、ゲームの準備（イベントリスナー設定）を行う
+        setupGame();
+
+    } catch (error) {
+        // ★★★ ログ (エラー) ★★★
+        console.error('問題データの読み込みに失敗しました:', error);
+        questionTextEl.textContent = 'エラー: 問題を読み込めませんでした。';
+        romanTextEl.textContent = 'URLやGASのデプロイ設定を確認してください。';
+    }
+}
+
+// --- 5. ゲーム準備 (データ読み込み後) ---
+/**
+ * ★変更: ゲームの準備（＆リセット）を行う
+ */
+function setupGame() {
+    // --- イベントリスナーを設定 ---
+    // (一度だけ設定すればOK)
+    if (!startButton.dataset.listenerAttached) {
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', setupGame); // ★リスタートボタン
+        document.addEventListener('keydown', onKeyPress);
+        startButton.dataset.listenerAttached = 'true'; // 二重登録を防止
+    }
+    
+    // --- UIを初期状態に戻す ---
+    settingsArea.classList.remove('hidden'); // 設定画面を表示
+    gameArea.classList.add('hidden');        // ゲーム画面を非表示
+    resultArea.classList.add('hidden');      // 結果画面を非表示
+
+    // --- 表示テキストをリセット ---
+    questionTextEl.textContent = 'ようこそ！';
+    romanTextEl.textContent = '学年を選んで「ゲームスタート」！';
+    typedTextEl.textContent = '';
+    startButton.disabled = false;
+    startButton.textContent = "ゲームスタート！";
+    
+    // --- スコアボードをリセット ---
+    timerEl.textContent = INITIAL_TIME;
+    questionCounterEl.textContent = `0 / ${QUESTION_LIMIT}`;
+    scoreEl.textContent = '0';
+    missEl.textContent = '0';
+
+    // ★★★ ログ ⑨: 初期化完了 ★★★
+    console.log('イベントリスナーの設定完了。準備OK。');
+}
+
+// --- 6. ゲームコア関数 ---
+
+/**
+ * 「ゲームスタート」ボタンが押された時の処理
+ * (10問をランダムに選ぶ)
+ */
+function startGame() {
+    const selectedGrade = parseInt(gradeSelect.value, 10);
+    console.log(`ゲームスタート！ 選んだ学年: ${selectedGrade}年生`);
+
+    // --- 1. 問題リストの作成 (変更なし) ---
+    let questionsToLoad = [];
+    for (let i = 1; i <= selectedGrade; i++) {
+        const gradeKey = String(i);
+        if (allQuestions[gradeKey]) {
+            questionsToLoad = questionsToLoad.concat(allQuestions[gradeKey]);
+        }
+    }
+    if (!questionsToLoad || questionsToLoad.length === 0) {
+        alert('この学年の問題データがありません。');
+        return;
+    }
+    
+    // ★変更: 問題リストをシャッフルする
+    shuffleArray(questionsToLoad);
+    
+    // ★変更: シャッフルしたリストから 10問 (QUESTION_LIMIT) だけ取り出す
+    gameQuestions = questionsToLoad.slice(0, QUESTION_LIMIT);
+    
+    // ★変更: 実際の問題数をグローバル変数に保存
+    totalQuestionsInGame = gameQuestions.length;
+    currentQuestionNumber = 0; // カウンターをリセット
+
+    console.log(`問題を ${totalQuestionsInGame} 問読み込みました。`);
+
+    // --- 2. 状態をリセット ---
+    score = 0;
+    miss = 0;
+    remainingTime = INITIAL_TIME; // 制限時間をリセット
+    scoreEl.textContent = '0';
+    missEl.textContent = '0';
+    timerEl.textContent = INITIAL_TIME;
+    isPlaying = true;
+    
+    // ★変更: UIの切り替え
+    settingsArea.classList.add('hidden');
+    resultArea.classList.add('hidden');
+    gameArea.classList.remove('hidden');
+
+    // --- 3. ゲーム開始 ---
+    setNextQuestion(); // 最初の問題へ
+    
+    clearInterval(timerId);
+    timerId = setInterval(updateTimer, 1000);
+}
+
+/**
+ * ★追加: 配列をシャッフルする関数 (Fisher-Yates)
+ */
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+/**
+ * 次の問題を設定する
+ */
+function setNextQuestion() {
+    // ★変更: クリア判定を「残り問題数」で行う
+    if (gameQuestions.length === 0) {
+        console.log('全問クリアしました。');
+        // ★変更: タイムアップではなく、10問クリア
+        finishGame('10問クリア！');
+        return;
+    }
+
+    // ★変更: 問題カウンターを増やす
+    currentQuestionNumber++;
+    questionCounterEl.textContent = `${currentQuestionNumber} / ${totalQuestionsInGame}`;
+    
+    // --- (以下、ランダムに問題を選ぶロジックは変更なし) ---
+    const qIndex = Math.floor(Math.random() * gameQuestions.length);
+    const qData = gameQuestions.splice(qIndex, 1)[0];
+    
+    if (!qData || typeof qData.h === 'undefined') {
+        console.error('qData または qData.h が undefined です。');
+        finishGame('内部エラーが発生しました。');
+        return;
+    }
+
+    keygraph = build_keygraph();
+    const cleanedHiragana = qData.h.trim().replace(/\s/g, '');
+    keygraph.build(cleanedHiragana);
+
+    console.log(`次の問題 (表示): ${qData.j} (ローマ字: ${keygraph.key_candidate()})`); 
+
+    if (typeof keygraph.key_candidate() === 'undefined' || keygraph.key_candidate() === "") {
+        console.error(`keygraph.build() が失敗しました。`);
+        finishGame('エラー: 問題データの形式が不正です。');
+        return;
+    }
+    
+    questionTextEl.textContent = qData.j;
+    updateDisplay();
+}
+
+/**
+ * タイマーを1秒ごとに更新する
+ */
+function updateTimer() {
+    remainingTime--;
+    timerEl.textContent = remainingTime;
+    
+    if (remainingTime <= 0) {
+        finishGame('時間切れ！');
+    }
+}
+
+/**
+ * ★変更: ゲームを終了し、結果画面を表示する
+ */
+function finishGame(message) {
+    clearInterval(timerId); // タイマーを止める
+    isPlaying = false;
+    
+    console.log(`ゲーム終了。メッセージ: ${message}`);
+
+    // --- 1. 最終スコアを計算 ---
+    const correctTypes = score;
+    const missedTypes = miss;
+    // 経過時間を計算 (60秒 - 残り時間)
+    const timeTaken = INITIAL_TIME - remainingTime; 
+    
+    let avgPerSecond = 0;
+    if (timeTaken > 0) {
+        // (スコア / 経過時間) で平均を計算し、小数点以下2桁に
+        avgPerSecond = (correctTypes / timeTaken).toFixed(2);
+    }
+
+    // --- 2. 結果画面に値を表示 ---
+    resultMessageEl.textContent = message; // "10問クリア！" または "時間切れ！"
+    resultScoreEl.textContent = correctTypes;
+    resultAvgEl.textContent = avgPerSecond;
+    resultMissEl.textContent = missedTypes;
+
+    // --- 3. UIを切り替え ---
+    gameArea.classList.add('hidden');
+    settingsArea.classList.add('hidden');
+    resultArea.classList.remove('hidden');
+}
+
+// --- 7. ヘルパー関数 ---
+
+/**
+ * keygraph の状態を画面（タイプ済み/未タイプ）に反映する
+ */
+function updateDisplay() {
+    // ★変更: READMEの正しい関数名に変更
+    typedTextEl.textContent = keygraph.key_done();
+    romanTextEl.textContent = keygraph.key_candidate();
+}
+
+/**
+ * ★軽量版: タイプミス時の控えめな演出
+ */
+function handleMiss(typedKey) {
+    console.warn(`タイプミス！ 入力: ${typedKey}`);
+
+    miss++;
+    missEl.textContent = miss;
+    
+    // 軽い視覚フィードバック: 左の境界線を一瞬赤くする
+    const typedTextElement = document.getElementById('typedText');
+    const romanTextElement = document.getElementById('romanText');
+    
+    typedTextElement.classList.add('miss-flash');
+    romanTextElement.classList.add('miss-flash');
+    
+    setTimeout(() => {
+        typedTextElement.classList.remove('miss-flash');
+        romanTextElement.classList.remove('miss-flash');
+    }, 300);
+}
+
+
+
+// --- 8. メインイベントハンドラ ---
+
+/**
+ * ★改良版: キーがタイプされた時の処理 (メインロジック)
+ */
+function onKeyPress(e) {
+    // ゲーム中でなければ何もしない
+    if (!isPlaying) return;
+
+    const typedKey = e.key;
+
+    // Shift, Ctrl, Alt などの修飾キーは無視
+    if (typedKey.length > 1 || e.ctrlKey || e.altKey || e.metaKey) {
+        return;
+    }
+
+    // ★変更: READMEのロジックに完全準拠
+    const isSuccess = keygraph.next(typedKey);
+
+    if (isSuccess) {
+        // --- 正解の場合 ---
+        
+        score++;
+        scoreEl.textContent = score;
+        
+        // ★変更: クリア判定を .is_finished() で行う
+        if (keygraph.is_finished()) {
+            console.log('★★ 問題クリア！次の問題へ進みます。 ★★');
+            score += 5; // クリアボーナス
+            scoreEl.textContent = score;
+            
+            // すぐに次の問題へ
+            setNextQuestion();
+        }
+
+    } else {
+        // --- 不正解の場合 ---
+        handleMiss(typedKey);
+    }
+    
+    // ★追加: 成功・失敗にかかわらず、常に表示を更新する
+    updateDisplay();
+}
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'994a4a0cd7f7d744',t:'MTc2MTQ4NTIyNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
